@@ -1,0 +1,48 @@
+#! /bin/bash
+#fichiers à modifier:
+Control="$1/DEBIAN/control"
+Version="$1/etc/zinud-version"
+Chlog="/usr/share/doc/zinud/changelog"
+Actuversion=$(cat $Version)
+
+#Test si applicable:
+if [ -f $Control ] && [ -f $Version ] && [ "$Actuversion" = "$(cat $Control | grep 'Version: ' | cut -d " " -f 2)" ]
+then
+	cd $1 && cd ..
+	Chversion=$(zenity --title="Versionning" --entry --text="Version actuelle: $Actuversion\n\nNouvelle version:" --entry-text="$Actuversion") || exit
+	Actuversionorg="$Actuversion"
+	if [ "$Chversion" = "$Actuversion" ]
+	then 
+		zenity --error --text="Les numéros de version ne peuvent être égaux!\nSortie..."
+	else 
+		cp -rf $1 zinud-base-$Chversion.all
+		cd zinud-base-$Chversion.all
+		echo "$Chversion" > ./etc/zinud-version
+		sed "s/$Actuversion/$Chversion/g" ./DEBIAN/control > ./DEBIAN/control~
+		mv -f ./DEBIAN/control~ ./DEBIAN/control
+		Actuversion=$(cat ./etc/zinud-version)
+		zenity --info --title="Versionning" --text="Paquet passé de la version $Actuversionorg à la version $Actuversion avec succès" --timeout="3"
+		zenity --question --text="Faut-il démarrer rapidsvn?"
+		if [ $? = 0 ]
+		then
+			rapidsvn &
+		fi
+		zenity --question --text="Faut-il en créer un paquet?"
+		if [ $? = 0 ]
+		then
+			Newchlog=$(zenity --title="Entrez les modif apportées:" --text-info --editable --filename=".$Chlog" --height=500 --width=700)
+			echo "$Newchlog" > ".$Chlog" && echo "$Newchlog" > ".$Chlog.debian"
+			cd ..
+			rm -rf $(find zinud-base-$Chversion.all/ -iname .svn)
+			dpkg-deb -b zinud-base-$Chversion.all | zenity --progress --auto-close --pulsate --text="<b>dpkg-deb :</b>\nConstruction du paquet « zinud-base »\ndans\n« zinud-base-$Actuversion.all.deb"
+			if [ -f zinud-base-$Chversion.all.deb ]
+			then rm -rf zinud-base-$Chversion.all
+			fi
+			zenity --info --text="Paquetage créé!\n\n`pwd`/zinud-base-$Actuversion.all.deb" --timeout="3"
+		else exit
+		fi
+		exit
+	fi
+else
+	zenity --error --title="Versionning" --text="Il ne s'agit pas d'un paquetage ZinuD correct !!!\n\nCRÉTIN !!!"
+fi
