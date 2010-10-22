@@ -17,10 +17,10 @@ then
 	else 
 		cp -rf $1 zinud-base-$Chversion.all
 		cd zinud-base-$Chversion.all
-		echo "$Chversion" > ./etc/zinud-version
-		sed "s/$Actuversion/$Chversion/g" ./DEBIAN/control > ./DEBIAN/control~
-		mv -f ./DEBIAN/control~ ./DEBIAN/control
-		Actuversion=$(cat ./etc/zinud-version)
+		echo "$Chversion" > etc/zinud-version
+		sed "s/$Actuversion/$Chversion/g" DEBIAN/control > DEBIAN/control~
+		mv -f DEBIAN/control~ DEBIAN/control
+		Actuversion=$(cat etc/zinud-version)
 		zenity --info --title="Versionning" --text="Paquet passé de la version $Actuversionorg à la version $Actuversion avec succès" --timeout="3"
 		zenity --question --text="Faut-il démarrer rapidsvn?"
 		if [ $? = 0 ]
@@ -34,6 +34,8 @@ then
 			echo "$Newchlog" > ".$Chlog" && echo "$Newchlog" > ".$Chlog.debian"
 			cd ..
 			rm -rf $(find zinud-base-$Chversion.all/ -iname .svn)
+			chown -hR root:root zinud-base-$Chversion.all
+			chmod -R 755 zinud-base-$Chversion.all
 			dpkg-deb -b zinud-base-$Chversion.all | zenity --progress --auto-close --pulsate --text="<b>dpkg-deb :</b>\nConstruction du paquet « zinud-base »\ndans\n« zinud-base-$Actuversion.all.deb"
 			if [ -f zinud-base-$Chversion.all.deb ]
 			then rm -rf zinud-base-$Chversion.all
