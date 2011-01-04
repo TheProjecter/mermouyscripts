@@ -37,9 +37,6 @@ then
 			chown -hR root:root zinud-base-$Chversion.all
 			chmod -R 755 zinud-base-$Chversion.all
 			dpkg-deb -b zinud-base-$Chversion.all | zenity --progress --auto-close --pulsate --text="<b>dpkg-deb :</b>\nConstruction du paquet « zinud-base »\ndans\n« zinud-base-$Actuversion.all.deb"
-			if [ -f zinud-base-$Chversion.all.deb ]
-			then rm -rf zinud-base-$Chversion.all
-			fi
 			zenity --info --text="Paquetage créé!\n\n`pwd`/zinud-base-$Actuversion.all.deb" --timeout="3"
 		else exit
 		fi
