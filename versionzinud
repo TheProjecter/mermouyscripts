@@ -5,12 +5,13 @@ Version="$1/etc/zinud-version"
 Chlog="/usr/share/doc/zinud/changelog"
 Actuversion=$(cat $Version)
 
-#Test si applicable:
+# Test si applicable:
 if [ -f $Control ] && [ -f $Version ] && [ "$Actuversion" = "$(cat $Control | grep 'Version: ' | cut -d " " -f 2)" ]
 then
 	cd $1 && cd ..
 	Chversion=$(zenity --title="Versionning" --entry --text="Version actuelle: $Actuversion\n\nNouvelle version:" --entry-text="$Actuversion") || exit
 	Actuversionorg="$Actuversion"
+# Test numéros de version
 	if [ "$Chversion" = "$Actuversion" ]
 	then 
 		zenity --error --text="Les numéros de version ne peuvent être égaux!\nSortie..."
@@ -21,6 +22,9 @@ then
 		sed "s/$Actuversion/$Chversion/g" DEBIAN/control > DEBIAN/control~
 		mv -f DEBIAN/control~ DEBIAN/control
 		Actuversion=$(cat etc/zinud-version)
+		Newchlog=$(zenity --title="Entrez les modif apportées:" --text-info --editable --filename=".$Chlog" --height=500 --width=700)
+		echo "$Newchlog" > "$Chlog" && echo "$Newchlog" > "$Chlog.debian"
+		echo "$Newchlog" > "../$1/$Chlog" && echo "$Newchlog" > "../$1/$Chlog.debian"
 		zenity --info --title="Versionning" --text="Paquet passé de la version $Actuversionorg à la version $Actuversion avec succès" --timeout="3"
 		zenity --question --text="Faut-il démarrer rapidsvn?"
 		if [ $? = 0 ]
@@ -30,8 +34,6 @@ then
 		zenity --question --text="Faut-il en créer un paquet?"
 		if [ $? = 0 ]
 		then
-			Newchlog=$(zenity --title="Entrez les modif apportées:" --text-info --editable --filename=".$Chlog" --height=500 --width=700)
-			echo "$Newchlog" > ".$Chlog" && echo "$Newchlog" > ".$Chlog.debian"
 			cd ..
 			rm -rf $(find zinud-base-$Chversion.all/ -iname .svn)
 			chown -hR root:root zinud-base-$Chversion.all
@@ -39,6 +41,11 @@ then
 			dpkg-deb -b zinud-base-$Chversion.all | zenity --progress --auto-close --pulsate --text="<b>dpkg-deb :</b>\nConstruction du paquet « zinud-base »\ndans\n« zinud-base-$Actuversion.all.deb"
 			zenity --info --text="Paquetage créé!\n\n`pwd`/zinud-base-$Actuversion.all.deb" --timeout="3"
 		else exit
+		fi
+		zenity --question --text="Faut-il supprimer le dossier temporaire créé?"
+		if [ $? = 0 ]
+		then
+			rm -rf zinud-base-$Chversion.all
 		fi
 		exit
 	fi
