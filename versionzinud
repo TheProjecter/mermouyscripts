@@ -16,11 +16,13 @@ then
 	then 
 		zenity --error --text="Les numéros de version ne peuvent être égaux!\nSortie..."
 	else 
+# Copie de travail
 		cp -rf $1 zinud-base-$Chversion.all
 		cd zinud-base-$Chversion.all
-		echo "$Chversion" > etc/zinud-version
+# Mise à jour avec numéro de version
+		echo "$Chversion" > etc/zinud-version && echo "$Chversion" > ../$1/etc/zinud-version
 		sed "s/$Actuversion/$Chversion/g" DEBIAN/control > DEBIAN/control~
-		mv -f DEBIAN/control~ DEBIAN/control
+		mv -f DEBIAN/control~ DEBIAN/control && cp -vf DEBIAN/control ../$1/DEBIAN/control
 		Actuversion=$(cat etc/zinud-version)
 		Newchlog=$(zenity --title="Entrez les modif apportées:" --text-info --editable --filename=".$Chlog" --height=500 --width=700)
 		echo "$Newchlog" > "$Chlog" && echo "$Newchlog" > "$Chlog.debian"
@@ -35,6 +37,7 @@ then
 		if [ $? = 0 ]
 		then
 			cd ..
+# Retrait des .svn
 			rm -rf $(find zinud-base-$Chversion.all/ -iname .svn)
 			chown -hR root:root zinud-base-$Chversion.all
 			chmod -R 755 zinud-base-$Chversion.all
