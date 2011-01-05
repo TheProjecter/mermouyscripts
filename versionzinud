@@ -28,11 +28,13 @@ then
 		echo "$Newchlog" > "$Chlog" && echo "$Newchlog" > "$Chlog.debian"
 		echo "$Newchlog" > "../$1/$Chlog" && echo "$Newchlog" > "../$1/$Chlog.debian"
 		zenity --info --title="Versionning" --text="Paquet passé de la version $Actuversionorg à la version $Actuversion avec succès" --timeout="3"
+# Rapidsvn?
 		zenity --question --text="Faut-il démarrer rapidsvn?"
 		if [ $? = 0 ]
 		then
 			rapidsvn &
 		fi
+# Création de paquet?
 		zenity --question --text="Faut-il en créer un paquet?"
 		if [ $? = 0 ]
 		then
