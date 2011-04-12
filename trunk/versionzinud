@@ -23,7 +23,7 @@ then
 		echo "$Chversion" > etc/zinud-version && echo "$Chversion" > ../$1/etc/zinud-version
 		sed "s/$Actuversion/$Chversion/g" DEBIAN/control > DEBIAN/control~
 		mv -f DEBIAN/control~ DEBIAN/control && cp -vf DEBIAN/control $Control
-		sed "s/$Actuversion/$Chversion/g" $Version
+		cp -f etc/zinud-version $Version
 		Actuversion=$(cat etc/zinud-version)
 		Newchlog=$(zenity --title="Entrez les modif apportées:" --text-info --editable --filename=".$Chlog" --height=500 --width=700)
 		echo "$Newchlog" > "$Chlog" && echo "$Newchlog" > "$Chlog.debian"
