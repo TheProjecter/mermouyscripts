@@ -33,6 +33,9 @@ Weptemp="/temp/.tempwep"
 
 # Création d'un fichier de sources vide
 Createwepassvide () {
+if [ -f $Wepfile ] 
+then Ecrase=$(zenity --question --text="<span color=\"red\">Le fichier existe\!</span>\nContinuer quand même et l'écraser?")
+fi
 echo -e "#!/bin/bash\n#Ce fichier à été généré automatiquement par Wepass\n\n#Point d'accès	Nom du réseau	Clé	Auto ou Adresse	Canal	Passerelle	Dns1	Dns2\n#Voici un exemple d'entrée (il faut bien sûr supprimer le '#')\n00:00:00:00:00:00	Mywifi	secretkey	auto	6\n
 #00:00:00:00:00:11	NextdoorWifi	hfqhfdsmhgqshgmkqhsgkmh	192.168.0.2	11	192.168.0.1	8.8.8.8	4.4.4.4\n#Acces Point	Name	Key	Address or auto	Channel	Gatheway	Dns1	Dns2\n" > $Wepfile || zenity --error --text="Création du fichier impossible\!\nSortie" && exit 0
 zenity --info --text="Création du fichier réussie\!\n\nLe fichier se trouve à:\n\n $Wepfile" --width=300 
@@ -109,7 +112,7 @@ fi
 
 #Vérification fichier
 if [ -z "$1" ] && [ ! -f $Wepfile ]
-	then Quefaire=$(zenity --title="Wepass" --list --text="Il semble que vous n'ayez fourni aucun fichier de réseaux source.\nEt que le fichier référence <b>/etc/wepass</b> n'existe pas.\n\nVoulez-vous:" --column="Action" --hide-header "Créer un fichier vierge" "Éditer le fichier créé" "Sélectionner un fichier de sources") || exit 0
+	then Quefaire=$(zenity --title="Wepass" --list --text="Il semble que vous n'ayez fourni aucun fichier de réseaux source.\nEt que le fichier référence <b>/etc/wepass</b> <u>youm.org</u> n'existe pas.\n\nVoulez-vous:" --column="Action" --hide-header "Créer un fichier vierge" "Éditer le fichier créé" "Sélectionner un fichier de sources") || exit 0
 	if [ "$Quefaire" = "Créer un fichier vierge" ]
 		then Createwepassvide && gedit $Wepfile && exec ./$0 $Wepfile
 	elif [ "$Quefaire" = "Éditer le fichier créé" ]
