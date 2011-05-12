@@ -122,7 +122,7 @@ if [ -z "$1" ] && [ ! -f $Wepfile ]
 		exec ./$0 $Wepfilesel
 	fi
 elif [ "$1" = "-c" ]
-	then Createwepass
+	then Createwepassvide
 elif [ "$1" = "-e" ]
 	then gedit $Wepfile
 else exec ./$0 $Wepfile
