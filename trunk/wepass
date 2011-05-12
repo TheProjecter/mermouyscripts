@@ -1,20 +1,20 @@
 #!/bin/bash
 # Script automatisant la connexion aux réseaux connus
 # MerMouY Gnu
-# Version:0.1
+# Version:0.1.1
 # Ce script requiert un fichier passé en argument ou lira le fichier $HOME/.config/wepass
 # Vous trouverez un exemple de fichier de sources rédigé dans $HOME/.config/wepass
 # Vous pouvez également lancer la commande wepass -c pour le créer interactivement ou encore lancer wepass -g pur en générer un vierge prêt à remplir
 
 ###VARIABLES À ÉDITER AU BESOIN
+#Interface réseau à configurer
+Eth="wlan0"
+
 #Commande wireless
 Iw="iwconfig"
 
 #Commande réseau
 If="ifconfig"
-
-#Interface réseau à configurer
-Eth="wlan0"
 
 ###VARIABLES
 #Fichier contenant les réseaux (passé en argument au script)
