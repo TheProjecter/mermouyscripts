@@ -173,7 +173,7 @@ Conf=$(cat $Fap1 | grep -E ^$N | sed -e "s/$N//")
 zenity --question --text="Est-ce que vous voulez appliquer les paramêtres suivants?\n\n$Conf"
 case $? in 
 	1) rm $Fap1 && exec wepass ;;
-	0) Applyconf $Conf;;
+	0) Applyconf $Conf && rm Fap1;;
 esac
 rm $Fap1
 exit 0
