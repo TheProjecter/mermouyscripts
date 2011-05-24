@@ -26,19 +26,29 @@ Weptemp="/temp/.tempwep"
 ###FIN DES VARIABLES
 
 #Vérification superutilisateur
-#if [[ $EUID -ne 0 ]]; then
-#	zenity --error --text="You Must be Root to manage wireless card\!" --title="Wepass" --timeout=3
-#	exit 0
-#fi
+if [[ $EUID -ne 0 ]]; then
+	zenity --error --text="<b>Vous avez besoin des droits administrateurs pour gérer les cartes wifi\!</b>" --title="Wepass" --timeout=3
+	exit 0
+fi
+
+#Vérification emplacement du script
+path="/usr/local/sbin"
+pathactu=$(dirname $0)
+if [ "$pathactu" != "$path" ]
+then zenity --question --text="Le script n'était pas dans <b>$path</b>\nVoulez vous le déplacer automatiquement et le lancer à nouveau?\n\nVous devrez par la suite lancer ce script depuis son nouveau chemin:\n\n$path/$0" --title="Wepass"
+	if [ "$?" = "1" ] ; then exit
+	else mv -b $0 $path/wepass && chmod +x $path/wepass && exec wepass
+	fi
+fi
 
 # Création d'un fichier de sources vide
 Createwepassvide () {
 if [ -f $Wepfile ] 
 then Ecrase=$(zenity --question --text="<span color=\"red\">Le fichier existe\!</span>\nContinuer quand même et l'écraser?")
 fi
-echo -e "#!/bin/bash\n#Ce fichier à été généré automatiquement par Wepass\n\n#Point d'accès	Nom du réseau	Clé	Auto ou Adresse	Canal	Passerelle	Dns1	Dns2\n#Voici un exemple d'entrée (il faut bien sûr supprimer le '#')\n00:00:00:00:00:00	Mywifi	secretkey	auto	6\n
-#00:00:00:00:00:11	NextdoorWifi	hfqhfdsmhgqshgmkqhsgkmh	192.168.0.2	11	192.168.0.1	8.8.8.8	4.4.4.4\n#Acces Point	Name	Key	Address or auto	Channel	Gatheway	Dns1	Dns2\n" > $Wepfile || zenity --error --text="Création du fichier impossible\!\nSortie" && exit 0
-zenity --info --text="Création du fichier réussie\!\n\nLe fichier se trouve à:\n\n $Wepfile" --width=300 
+echo -e "#!/bin/bash\n#Ce fichier à été généré automatiquement par Wepass\n#Pour l'éditer correctement chaque entrée doit être séparée par une tabulation\n#\n#Voici un exemple d entrée (retirez le # en début de ligne)\n#Point d'accès\t|\tNom du réseau\t|\tClé\t|\tAuto ou Adresse\t|\tCanal\t|\tPasserelle\t|\tDns1\t|\tDns2\n
+#00:00:00:00:00:11\tNextdoorWifi\thfqhfdsmhgqshgmkqhsgkmh\t192.168.0.2\t11\t192.168.0.1\t8.8.8.8\t4.4.4.4\n\n#auto\tNextdoorWifi\thfqhfdsmhgqshgmkqhsgkmh\tauto\t11\t192.168.0.1\t8.8.8.8\t4.4.4.4\n\n#Acces Point\t|\tName\t|\tKey\t|\tAddress or auto\t|\tChannel\t|\tGatheway\t|	Dns1\t|\tDns2\n" > $Wepfile || zenity --error --text="Création du fichier impossible\!"
+zenity --info --text="<b>Création du fichier réussie\!</b>\n\nLe fichier se trouve à: $Wepfile\n\nVous allez maintenant pouvoir l'éditer, le script continuera dès que vous aurez fermé l'éditeur de texte." --width=300 
 }
 
 ###FONCTIONS
@@ -63,7 +73,7 @@ if [ $? -eq 0 ]; then
 else 
 	zenity --question --text="Vous n'êtes pas connecté.\n\nRelancer l'assistant?" || exit 0
 	if [ $? = 0 ]
-		then exec $0 $1
+		then exec wepass $1
 	fi
 fi
 }
@@ -78,7 +88,7 @@ if [ "$4" = "auto" ] || [ "$4" = "dhcp" ] || [ -z "$4" ]
 	zenity --text-info --width=400 --filename=.dhc && rm .dhc
 	Verif
 # Validité des entrées adresse
-elif [ $(IsIPv4 $4) = "bad" ] || [ $(IsIPv4 $7) = "bad" ] || [ $(IsIPv4 $8) = "bad" ] || [ $(IsIPv4 $6) = "bad" ]
+elif [ ! -z $(echo $# | grep "bad") ]
 	then zenity --error --text="Une de vos adresse est incorrecte\!\n\nModifiez votre fichier de sources..."
 	exit 0
 # Application des adresses entrées
@@ -112,24 +122,38 @@ fi
 
 #Vérification fichier
 if [ -z "$1" ] && [ ! -f $Wepfile ]
-	then Quefaire=$(zenity --title="Wepass" --list --text="Il semble que vous n'ayez fourni aucun fichier de réseaux source.\nEt que le fichier référence <b>/etc/wepass</b> <u>youm.org</u> n'existe pas.\n\nVoulez-vous:" --column="Action" --hide-header "Créer un fichier vierge" "Éditer le fichier créé" "Sélectionner un fichier de sources") || exit 0
+	then Quefaire=$(zenity --title="Wepass" --list --text="Il semble que vous n'ayez fourni aucun fichier de réseaux source.\nEt que le fichier référence <b>/etc/wepass</b> n'existe pas.\n\nVoulez-vous:" --column="Action" --hide-header "Créer un fichier vierge" "Éditer le fichier existant" "Sélectionner un fichier de sources") || exit 0
 	if [ "$Quefaire" = "Créer un fichier vierge" ]
-		then Createwepassvide && gedit $Wepfile && exec ./$0 $Wepfile
-	elif [ "$Quefaire" = "Éditer le fichier créé" ]
-		then gedit $Wepfile && exec ./$0
+		then Createwepassvide && gedit $Wepfile && exec wepass $Wepfile
+	elif [ "$Quefaire" = "Éditer le fichier existant" ]
+		then gedit $Wepfile && exec wepass
 	elif [ "$Quefaire" = "Sélectionner un fichier de sources" ]
 		then Wepfilesel=$(zenity --file-selection --title="Choississez un fichiers de sources de réseaux Wep")
-		exec ./$0 $Wepfilesel
+		exec wepass $Wepfilesel
+	fi
+elif [ -z "$1" ] && [ -f $Wepfile ]
+	then Quefaire=$(zenity --title="Wepass" --list --text="Il semble que vous n'ayez fourni aucun fichier de réseaux source.\n\nCependant le fichier référence <b>/etc/wepass</b> existe. Voulez-vous:" --column="Action" --hide-header "Éditer le fichier existant" "Sélectionner un autre fichier de sources") || exit 0
+	if [ "$Quefaire" = "Éditer le fichier existant" ]
+		then gedit $Wepfile && exec wepass $Wepfile
+	elif [ "$Quefaire" = "Sélectionner un autre fichier de sources" ]
+		then Wepfilesel=$(zenity --file-selection --title="Choississez un fichiers de sources de réseaux Wep")
+		exec wepass $Wepfilesel
 	fi
 elif [ "$1" = "-c" ]
 	then Createwepassvide
 elif [ "$1" = "-e" ]
 	then gedit $Wepfile
-else exec ./$0 $Wepfile
 fi
 
 ##Extraction des données
 #Nettoyage fichier et numérotation des lignes
+while [ -z "$(cat $Fap | grep -v "#" | grep -v "^$")" ]
+do zenity --error --text="Aucun  réseau valable trouvé dans ce fichier\!\Lancement de l'éditeur, relance du script à la fermeture de gedit."
+gedit $Fap
+done
+if [ ! -f $Fap ]
+then zenity --error --text="Le fichier n'existe pas" && exit 0
+fi
 sed '/^[ ]*#/d' $Fap | sed '/^$/d' | sed = | sed '/./N;s/\n/ /' > $Fap1
 
 #Extraction des Nom du réseaus de réseaux
@@ -148,8 +172,8 @@ $Listap) || exit 0
 Conf=$(cat $Fap1 | grep -E ^$N | sed -e "s/$N//")
 zenity --question --text="Est-ce que vous voulez appliquer les paramêtres suivants?\n\n$Conf"
 case $? in 
-	1) rm $Fap1 && exec ./$0 ;;
-	0) Applyconf ;;
+	1) rm $Fap1 && exec wepass ;;
+	0) Applyconf $Conf;;
 esac
 rm $Fap1
 exit 0
